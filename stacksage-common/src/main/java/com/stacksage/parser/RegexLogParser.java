@@ -17,13 +17,13 @@ public class RegexLogParser implements LogParser {
 
     private static final Pattern EXCEPTION_HEADER = Pattern.compile(
             "^(?:Caused by:\\s*|Suppressed:\\s*)?" +
-            "(\\S+(?:\\.\\S+)*(?:Exception|Error|Throwable))" +
+            "([^\\s.]+(?:\\.[^\\s.]+)*(?:Exception|Error|Throwable))" +
             "(?:\\s*:\\s*(.*))?$"
     );
 
     private static final Pattern PREFIXED_EXCEPTION_HEADER = Pattern.compile(
-            "^.+?[-–]\\s+" +
-            "(\\S+(?:\\.\\S+)*(?:Exception|Error|Throwable))" +
+            "^.+?[-\\u2013]\\s+" +
+            "([^\\s.]+(?:\\.[^\\s.]+)*(?:Exception|Error|Throwable))" +
             "(?:\\s*:\\s*(.*))?$"
     );
 

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -49,13 +50,16 @@ class AnalysisControllerTest {
     @Autowired
     private AnalysisRepository analysisRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @Value("${app.upload-dir}")
     private String uploadDir;
 
     @AfterEach
     void cleanup() throws IOException {
-        analysisRepository.deleteAll();
-        uploadRepository.deleteAll();
+        jdbcTemplate.execute("DELETE FROM analysis_records");
+        jdbcTemplate.execute("DELETE FROM upload_records");
         Path dir = Paths.get(uploadDir).toAbsolutePath().normalize();
         if (Files.exists(dir)) {
             try (Stream<Path> entries = Files.list(dir)) {
