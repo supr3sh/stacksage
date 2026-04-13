@@ -1,2 +1,5 @@
-$env:JAVA_HOME = "C:\Users\smahajan1\jdk17\jdk-17.0.13+11"
+if (-not $env:JAVA_HOME) {
+    Write-Error "JAVA_HOME is not set. Please set it to your JDK 17 installation."
+    exit 1
+}
 & "$PSScriptRoot\mvnw.cmd" -s .mvn/settings.xml @args
