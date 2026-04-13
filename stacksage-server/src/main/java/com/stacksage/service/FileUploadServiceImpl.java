@@ -57,7 +57,7 @@ public class FileUploadServiceImpl implements FileUploadService {
         UploadRecord saved = uploadRepository.save(record);
 
         // Write file to disk
-        Path targetPath = storageConfig.getUploadPath().resolve(storedFilename);
+        Path targetPath = resolveUploadPath(storedFilename);
         try {
             Files.copy(file.getInputStream(), targetPath);
         } catch (IOException e) {
@@ -94,7 +94,7 @@ public class FileUploadServiceImpl implements FileUploadService {
         UploadRecord record = findRecordOrThrow(id);
         uploadRepository.delete(record);
 
-        Path filePath = storageConfig.getUploadPath().resolve(record.getStoredFilename());
+        Path filePath = resolveUploadPath(record.getStoredFilename());
         try {
             Files.deleteIfExists(filePath);
         } catch (IOException e) {
@@ -110,8 +110,8 @@ public class FileUploadServiceImpl implements FileUploadService {
     }
 
     private String readFileContent(String storedFilename) {
-        Path filePath = storageConfig.getUploadPath().resolve(storedFilename);
-        Path analyzingPath = filePath.resolveSibling(filePath.getFileName() + ".analyzing");
+        Path filePath = resolveUploadPath(storedFilename);
+        Path analyzingPath = resolveUploadPath(storedFilename + ".analyzing");
         Path readPath = Files.exists(filePath) ? filePath : analyzingPath;
         try {
             return Files.readString(readPath, java.nio.charset.StandardCharsets.UTF_8);
@@ -161,6 +161,15 @@ public class FileUploadServiceImpl implements FileUploadService {
             throw new FileUploadException("Invalid filename");
         }
         return safe;
+    }
+
+    private Path resolveUploadPath(String filename) {
+        Path base = storageConfig.getUploadPath().normalize();
+        Path resolved = base.resolve(filename).normalize();
+        if (!resolved.startsWith(base)) {
+            throw new FileUploadException("Invalid file path");
+        }
+        return resolved;
     }
 
     private String getExtension(String filename) {
