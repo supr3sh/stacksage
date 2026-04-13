@@ -52,14 +52,14 @@ export DB_PASSWORD=your_db_password   # optional, defaults to configured value
 java -jar stacksage-server/target/stacksage-server-0.1.0-SNAPSHOT.jar
 ```
 
-The server starts on `http://localhost:8080`.
+The server starts on port `8080` by default.
 
 ## API Documentation
 
 Once the server is running, interactive API docs are available at:
 
-- **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-- **OpenAPI JSON:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+- **Swagger UI:** `/swagger-ui.html`
+- **OpenAPI JSON:** `/v3/api-docs`
 
 ## API Endpoints
 
@@ -117,10 +117,10 @@ The CLI resolves the server URL in this order:
 ```
 Parsing app.log (2 MB)...
 Found 3 exception(s)
-Submitting to StackSage server (http://localhost:8080)...
+Submitting to StackSage server (http://<server>:8080)...
 
 Analysis ID: a1b2c3d4-e5f6-7890-abcd-ef1234567890
-View results: http://localhost:8080/api/v1/analyses/a1b2c3d4-e5f6-7890-abcd-ef1234567890
+View results: http://<server>:8080/api/v1/analyses/a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ```
 
 With `--wait`, the CLI polls until analysis completes and prints formatted results:
