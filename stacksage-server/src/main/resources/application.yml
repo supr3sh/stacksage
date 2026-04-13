@@ -1,0 +1,73 @@
+spring:
+  application:
+    name: stacksage
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  datasource:
+    url: jdbc:postgresql://ep-billowing-wildflower-a1ymqepo.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+    username: ${DB_USERNAME:neondb_owner}
+    password: ${DB_PASSWORD:ENC(encrypted_placeholder)}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+jasypt:
+  encryptor:
+    algorithm: PBEWithMD5AndDES
+    password: ${JASYPT_ENCRYPTOR_PASSWORD:}
+
+server:
+  port: 8080
+  tomcat:
+    max-http-form-content-size: 2MB
+    max-swallow-size: 2MB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+  info:
+    env:
+      enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  upload-dir: ./uploads
+  rate-limit:
+    enabled: true
+    max-requests: 20
+    window-seconds: 60
+    trust-proxy: false
+  openai:
+    api-key: ${OPENAI_API_KEY:}
+    model: gpt-4o-mini
+    max-tokens: 1024
+    temperature: 0.3
+    connect-timeout-seconds: 5
+    read-timeout-seconds: 30
+  async:
+    analysis-pool-size: 2
+    analysis-max-pool-size: 4
+    analysis-queue-capacity: 50
+    ai-pool-size: 4
+  cleanup:
+    enabled: true
+    interval-ms: 900000
