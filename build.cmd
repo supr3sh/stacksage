@@ -1,3 +1,6 @@
 @echo off
-set JAVA_HOME=C:\Users\smahajan1\jdk17\jdk-17.0.13+11
+if not defined JAVA_HOME (
+    echo JAVA_HOME is not set. Please set it to your JDK 17 installation.
+    exit /b 1
+)
 call mvnw.cmd -s .mvn/settings.xml %*
