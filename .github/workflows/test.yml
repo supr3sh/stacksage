@@ -3,12 +3,15 @@ name: Run Tests
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  test:
+  java-tests:
+    name: Java Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -24,3 +27,30 @@ jobs:
 
       - name: Run tests
         run: chmod +x ./mvnw && ./mvnw test -B
+
+  ui-tests:
+    name: UI Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: stacksage-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: stacksage-ui
+
+      - name: Run tests
+        run: npm test
+        working-directory: stacksage-ui
+
+      - name: Build
+        run: npm run build
+        working-directory: stacksage-ui

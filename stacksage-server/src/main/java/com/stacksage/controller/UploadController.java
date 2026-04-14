@@ -2,6 +2,7 @@ package com.stacksage.controller;
 
 import com.stacksage.model.UploadResponse;
 import com.stacksage.service.FileUploadService;
+import com.stacksage.service.SseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,9 +27,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class UploadController {
 
     private final FileUploadService fileUploadService;
+    private final SseService sseService;
 
-    public UploadController(FileUploadService fileUploadService) {
+    public UploadController(FileUploadService fileUploadService, SseService sseService) {
         this.fileUploadService = fileUploadService;
+        this.sseService = sseService;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -40,8 +44,15 @@ public class UploadController {
             @ApiResponse(responseCode = "413", description = "File exceeds size limit"),
             @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
     })
-    public ResponseEntity<UploadResponse> uploadFile(@RequestParam("file") MultipartFile file) {
-        UploadResponse response = fileUploadService.uploadFile(file);
+    public ResponseEntity<UploadResponse> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @Parameter(description = "Keep uploaded file on disk after analysis completes")
+            @RequestParam(value = "retain", defaultValue = "false") boolean retain,
+            @RequestHeader(value = "X-Session-Id", required = false) String sessionId) {
+        UploadResponse response = fileUploadService.uploadFile(file, retain);
+        if (sessionId != null && !sessionId.isBlank()) {
+            sseService.link(response.getId(), sessionId);
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

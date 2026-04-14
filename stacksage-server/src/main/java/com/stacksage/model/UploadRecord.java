@@ -43,6 +43,9 @@ public class UploadRecord {
     @Builder.Default
     private UploadStatus status = UploadStatus.UPLOADED;
 
+    @Builder.Default
+    private boolean retain = false;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

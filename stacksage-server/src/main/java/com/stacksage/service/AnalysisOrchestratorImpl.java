@@ -25,7 +25,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AnalysisOrchestratorImpl implements AnalysisOrchestrator {
@@ -39,17 +41,20 @@ public class AnalysisOrchestratorImpl implements AnalysisOrchestrator {
     private final LogAnalysisService logAnalysisService;
     private final StorageConfig storageConfig;
     private final ObjectMapper objectMapper;
+    private final SseService sseService;
 
     public AnalysisOrchestratorImpl(AnalysisRepository analysisRepository,
                                     UploadRepository uploadRepository,
                                     LogAnalysisService logAnalysisService,
                                     StorageConfig storageConfig,
-                                    ObjectMapper objectMapper) {
+                                    ObjectMapper objectMapper,
+                                    SseService sseService) {
         this.analysisRepository = analysisRepository;
         this.uploadRepository = uploadRepository;
         this.logAnalysisService = logAnalysisService;
         this.storageConfig = storageConfig;
         this.objectMapper = objectMapper;
+        this.sseService = sseService;
     }
 
     @Override
@@ -76,9 +81,35 @@ public class AnalysisOrchestratorImpl implements AnalysisOrchestrator {
                 return logAnalysisService.analyze(rawLog);
             });
         } finally {
+            handlePostAnalysisFile(uploadId, analyzingPath, originalPath);
+        }
+    }
+
+    private void handlePostAnalysisFile(String uploadId, Path analyzingPath, Path originalPath) {
+        boolean retain = uploadRepository.findById(uploadId)
+                .map(r -> r.isRetain())
+                .orElse(true);
+
+        if (retain) {
             if (analyzingPath != null) {
                 renameFromAnalyzing(analyzingPath, originalPath);
             }
+        } else {
+            Path toDelete = (analyzingPath != null && Files.exists(analyzingPath))
+                    ? analyzingPath : originalPath;
+            if (toDelete != null) {
+                deleteFileQuietly(toDelete);
+            }
+        }
+    }
+
+    private void deleteFileQuietly(Path path) {
+        try {
+            if (Files.deleteIfExists(path)) {
+                log.info("Deleted non-retained upload file: {}", path.getFileName());
+            }
+        } catch (IOException e) {
+            log.warn("Failed to delete non-retained file {}: {}", path.getFileName(), e.getMessage());
         }
     }
 
@@ -153,6 +184,10 @@ public class AnalysisOrchestratorImpl implements AnalysisOrchestrator {
 
             log.info("Analysis completed: analysisId={}, exceptions={}",
                     record.getId(), results.size());
+
+            sseService.publish("analysis.completed", record.getUploadId(), Map.of(
+                    "analysisId", record.getId(),
+                    "uploadId", String.valueOf(record.getUploadId())));
         } catch (Exception e) {
             log.error("Analysis failed: analysisId={}: {}",
                     record.getId(), e.getMessage(), e);
@@ -160,6 +195,12 @@ public class AnalysisOrchestratorImpl implements AnalysisOrchestrator {
             record.setErrorMessage(summarizeError(e));
             record.setCompletedAt(LocalDateTime.now());
             analysisRepository.save(record);
+
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put("analysisId", record.getId());
+            eventData.put("uploadId", record.getUploadId());
+            eventData.put("error", record.getErrorMessage());
+            sseService.publish("analysis.failed", record.getUploadId(), eventData);
         }
     }
 

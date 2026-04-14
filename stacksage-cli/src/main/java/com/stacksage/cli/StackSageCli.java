@@ -20,7 +20,7 @@ import java.util.function.Function;
 
 public class StackSageCli {
 
-    private static final String DEFAULT_SERVER = "http://localhost:8080";
+    private static final String DEFAULT_SERVER = "http://localhost:9090";
     private static final String ENV_SERVER = "STACKSAGE_SERVER";
     private static final int POLL_INTERVAL_MS = 2000;
     private static final int MAX_POLL_ATTEMPTS = 150;
@@ -292,14 +292,14 @@ public class StackSageCli {
         System.out.println("Usage: stacksage-cli [OPTIONS] <log-file>");
         System.out.println();
         System.out.println("Options:");
-        System.out.println("  --server <url>  StackSage server URL (default: STACKSAGE_SERVER env or localhost:8080)");
+        System.out.println("  --server <url>  StackSage server URL (default: STACKSAGE_SERVER env or localhost:9090)");
         System.out.println("  --wait          Wait for analysis to complete and print results");
         System.out.println("  --help, -h      Show this help message");
         System.out.println();
         System.out.println("Server URL resolution order:");
         System.out.println("  1. --server flag (highest priority)");
         System.out.println("  2. STACKSAGE_SERVER environment variable");
-        System.out.println("  3. http://localhost:8080 (default)");
+        System.out.println("  3. http://localhost:9090 (default)");
     }
 
     void exitWithError(String message) {

@@ -22,7 +22,7 @@ RUN mkdir -p /app/uploads && chown stacksage:stacksage /app/uploads
 
 COPY --from=build /workspace/stacksage-server/target/*.jar app.jar
 
-EXPOSE 8080
+EXPOSE 9090
 USER stacksage
 
 ENTRYPOINT ["java", \

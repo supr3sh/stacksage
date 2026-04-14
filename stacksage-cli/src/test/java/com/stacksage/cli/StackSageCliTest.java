@@ -37,13 +37,13 @@ class StackSageCliTest {
     void resolveServerUrl_nullFlag_noEnv_usesDefault() {
         StackSageCli cli = cliWithEnv(Map.of());
         String result = cli.resolveServerUrl(null);
-        assertThat(result).isEqualTo("http://localhost:8080");
+        assertThat(result).isEqualTo("http://localhost:9090");
     }
 
     @Test
     void resolveServerUrl_blankFlag_usesDefault() {
         StackSageCli cli = cliWithEnv(Map.of());
         String result = cli.resolveServerUrl("  ");
-        assertThat(result).isEqualTo("http://localhost:8080");
+        assertThat(result).isEqualTo("http://localhost:9090");
     }
 }

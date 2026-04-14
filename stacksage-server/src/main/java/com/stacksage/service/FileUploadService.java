@@ -5,7 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface FileUploadService {
 
-    UploadResponse uploadFile(MultipartFile file);
+    UploadResponse uploadFile(MultipartFile file, boolean retain);
 
     UploadResponse getUpload(String id);
 

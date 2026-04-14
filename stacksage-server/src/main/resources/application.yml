@@ -28,7 +28,7 @@ jasypt:
     password: ${JASYPT_ENCRYPTOR_PASSWORD:}
 
 server:
-  port: 8080
+  port: 9090
   tomcat:
     max-http-form-content-size: 2MB
     max-swallow-size: 2MB
@@ -74,3 +74,6 @@ app:
   cleanup:
     enabled: true
     interval-ms: 900000
+    retain-hours: 48
+    delete-records: false
+    record-retention-hours: 168

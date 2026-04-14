@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-stacksage}
+      POSTGRES_USER: ${POSTGRES_USER:-stacksage}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stacksage} -d ${POSTGRES_DB:-stacksage}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  server:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${SERVER_PORT:-9090}:9090"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-stacksage}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-stacksage}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      AI_API_KEY: ${AI_API_KEY:?Set AI_API_KEY in .env}
+      JASYPT_ENCRYPTOR_PASSWORD: ${JASYPT_ENCRYPTOR_PASSWORD:-}
+    volumes:
+      - uploads:/app/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  ui:
+    build:
+      context: ./stacksage-ui
+    depends_on:
+      server:
+        condition: service_healthy
+    ports:
+      - "${UI_PORT:-8080}:8080"
+
+volumes:
+  pgdata:
+  uploads:

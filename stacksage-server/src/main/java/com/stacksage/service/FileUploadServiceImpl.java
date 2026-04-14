@@ -41,18 +41,18 @@ public class FileUploadServiceImpl implements FileUploadService {
     }
 
     @Override
-    public UploadResponse uploadFile(MultipartFile file) {
+    public UploadResponse uploadFile(MultipartFile file, boolean retain) {
         validateFile(file);
 
         String originalFilename = sanitizeFilename(file.getOriginalFilename());
         String storedFilename = UUID.randomUUID() + "_" + originalFilename;
 
-        // Save DB record first with PENDING status to avoid orphaned files
         UploadRecord record = UploadRecord.builder()
                 .originalFilename(originalFilename)
                 .storedFilename(storedFilename)
                 .fileSize(Math.max(0, file.getSize()))
                 .status(UploadStatus.PENDING)
+                .retain(retain)
                 .build();
         UploadRecord saved = uploadRepository.save(record);
 
