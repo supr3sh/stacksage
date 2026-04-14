@@ -7,7 +7,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
@@ -41,7 +40,6 @@ public class AnalysisRecord {
     @Builder.Default
     private AnalysisStatus status = AnalysisStatus.PENDING;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String resultsJson;
 
