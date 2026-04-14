@@ -110,7 +110,9 @@ class UploadControllerTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "debug.log", "text/plain", logContent.getBytes());
 
-        MvcResult uploadResult = mockMvc.perform(multipart("/api/v1/uploads").file(file))
+        MvcResult uploadResult = mockMvc.perform(multipart("/api/v1/uploads")
+                        .file(file)
+                        .param("retain", "true"))
                 .andExpect(status().isCreated())
                 .andReturn();
 
