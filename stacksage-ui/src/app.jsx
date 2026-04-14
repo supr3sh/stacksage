@@ -1,18 +1,62 @@
 import Router from 'preact-router';
+import { useCallback } from 'preact/hooks';
+import { Layout } from './components/Layout.jsx';
+import { ToastProvider, useToast } from './components/Toast.jsx';
+import { useSSE } from './hooks/useSSE.js';
+import { useUploadHistory } from './hooks/useUploadHistory.js';
+import { Home } from './pages/Home.jsx';
+import { Upload } from './pages/Upload.jsx';
+import { History } from './pages/History.jsx';
+import { AnalysisView } from './pages/AnalysisView.jsx';
+
+function AppRoutes() {
+  const addToast = useToast();
+  const { uploads, addUpload, updateUpload, removeUpload, clearAll } = useUploadHistory();
+
+  const handleSSE = useCallback((event, data) => {
+    if (event === 'file.cleanup') {
+      removeUpload(data.uploadId);
+      addToast(`File "${data.filename}" was cleaned up by the server`, 'warning');
+    }
+    if (event === 'analysis.completed') {
+      updateUpload(data.uploadId, { analysisId: data.analysisId, status: 'COMPLETED' });
+      addToast('Analysis completed', 'success');
+    }
+    if (event === 'analysis.failed') {
+      updateUpload(data.uploadId, { status: 'FAILED' });
+      addToast(`Analysis failed: ${data.error || 'unknown error'}`, 'error');
+    }
+  }, [removeUpload, updateUpload, addToast]);
+
+  const { sessionId, connected } = useSSE(handleSSE);
+
+  return (
+    <Layout connected={connected}>
+      <Router>
+        <Home path="/" />
+        <Upload path="/upload" addUpload={addUpload} updateUpload={updateUpload} sessionId={sessionId} />
+        <History path="/history" uploads={uploads} clearAll={clearAll} />
+        <AnalysisView path="/analysis/:id" />
+        <NotFound default />
+      </Router>
+    </Layout>
+  );
+}
+
+function NotFound() {
+  return (
+    <div class="text-center py-16">
+      <div class="text-4xl mb-3">🔍</div>
+      <h2 class="text-xl font-semibold">Page not found</h2>
+      <a href="/" class="text-indigo-500 hover:text-indigo-700 text-sm mt-2 inline-block">← Back home</a>
+    </div>
+  );
+}
 
 export function App() {
   return (
-    <div class="min-h-full">
-      <header class="bg-indigo-600 dark:bg-indigo-800 text-white px-6 py-4">
-        <h1 class="text-xl font-bold">StackSage</h1>
-        <p class="text-indigo-200 text-sm">AI-powered Java debugging</p>
-      </header>
-      <main class="max-w-4xl mx-auto px-6 py-10">
-        <div class="text-center">
-          <h2 class="text-2xl font-semibold mb-2">Welcome to StackSage</h2>
-          <p class="text-gray-500 dark:text-gray-400">Upload, analyze, and debug Java exceptions with AI.</p>
-        </div>
-      </main>
-    </div>
+    <ToastProvider>
+      <AppRoutes />
+    </ToastProvider>
   );
 }
