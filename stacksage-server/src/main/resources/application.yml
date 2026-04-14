@@ -56,13 +56,16 @@ app:
     max-requests: 20
     window-seconds: 60
     trust-proxy: false
-  openai:
-    api-key: ${OPENAI_API_KEY:}
-    model: gpt-4o-mini
+  ai:
+    api-key: ${AI_API_KEY:}
+    model: meta-llama/llama-3.3-70b-instruct:free
+    base-url: https://openrouter.ai/api
     max-tokens: 1024
     temperature: 0.3
     connect-timeout-seconds: 5
     read-timeout-seconds: 30
+    referer: ""
+    app-name: StackSage
   async:
     analysis-pool-size: 2
     analysis-max-pool-size: 4

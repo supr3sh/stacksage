@@ -21,7 +21,7 @@ app:
   upload-dir: ./test-uploads
   rate-limit:
     enabled: false
-  openai:
+  ai:
     api-key: ""
   async:
     analysis-pool-size: 2

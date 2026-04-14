@@ -3,7 +3,7 @@ package com.stacksage.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.stacksage.config.OpenAIConfig;
+import com.stacksage.config.AIProviderConfig;
 import com.stacksage.exception.AIDiagnosticException;
 import com.stacksage.model.AIDiagnosisResult;
 import com.stacksage.parser.ExceptionDetail;
@@ -25,9 +25,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-public class OpenAIDiagnosticServiceImpl implements AIDiagnosticService {
+public class AIDiagnosticServiceImpl implements AIDiagnosticService {
 
-    private static final Logger log = LoggerFactory.getLogger(OpenAIDiagnosticServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(AIDiagnosticServiceImpl.class);
 
     private static final int MAX_STACK_FRAMES = 10;
     private static final int MAX_MESSAGE_LENGTH = 500;
@@ -58,14 +58,14 @@ public class OpenAIDiagnosticServiceImpl implements AIDiagnosticService {
             .rootCause("__FAILURE__").build();
 
     private final RestClient restClient;
-    private final OpenAIConfig config;
+    private final AIProviderConfig config;
     private final ObjectMapper objectMapper;
     private final ConcurrentHashMap<String, CacheEntry> cache = new ConcurrentHashMap<>();
 
-    public OpenAIDiagnosticServiceImpl(RestClient openAIRestClient,
-                                       OpenAIConfig config,
-                                       ObjectMapper objectMapper) {
-        this.restClient = openAIRestClient;
+    public AIDiagnosticServiceImpl(RestClient aiRestClient,
+                                   AIProviderConfig config,
+                                   ObjectMapper objectMapper) {
+        this.restClient = aiRestClient;
         this.config = config;
         this.objectMapper = objectMapper;
     }
@@ -73,7 +73,7 @@ public class OpenAIDiagnosticServiceImpl implements AIDiagnosticService {
     @Override
     public AIDiagnosisResult diagnose(ExceptionDetail exception) {
         if (!config.isConfigured()) {
-            log.warn("OpenAI API key not configured — skipping AI diagnosis");
+            log.warn("AI API key not configured — skipping AI diagnosis");
             return null;
         }
 
@@ -192,13 +192,13 @@ public class OpenAIDiagnosticServiceImpl implements AIDiagnosticService {
         AIDiagnosticException lastException = null;
         for (int attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             try {
-                return callOpenAI(requestBody);
+                return callAIProvider(requestBody);
             } catch (AIDiagnosticException e) {
                 lastException = e;
                 if (!isRetryable(e) || attempt >= MAX_RETRIES) {
                     break;
                 }
-                log.warn("OpenAI call failed (attempt {}), retrying: {}",
+                log.warn("AI provider call failed (attempt {}), retrying: {}",
                         attempt + 1, e.getMessage());
                 sleep(1000L * (attempt + 1));
             }
@@ -214,7 +214,7 @@ public class OpenAIDiagnosticServiceImpl implements AIDiagnosticService {
         return true;
     }
 
-    private String callOpenAI(Map<String, Object> requestBody) {
+    private String callAIProvider(Map<String, Object> requestBody) {
         try {
             String responseJson = restClient.post()
                     .uri("/v1/chat/completions")
@@ -225,13 +225,13 @@ public class OpenAIDiagnosticServiceImpl implements AIDiagnosticService {
                         String body = new String(bodyBytes, java.nio.charset.StandardCharsets.UTF_8);
                         int status = res.getStatusCode().value();
                         throw new RestClientResponseException(
-                                "OpenAI API error " + status + ": " + body,
+                                "AI provider error " + status + ": " + body,
                                 status, res.getStatusText(), res.getHeaders(), bodyBytes, null);
                     })
                     .body(String.class);
 
             if (responseJson == null || responseJson.isBlank()) {
-                throw new AIDiagnosticException("OpenAI returned empty response body");
+                throw new AIDiagnosticException("AI provider returned empty response body");
             }
 
             JsonNode root = objectMapper.readTree(responseJson);
@@ -240,31 +240,31 @@ public class OpenAIDiagnosticServiceImpl implements AIDiagnosticService {
 
             JsonNode choices = root.path("choices");
             if (choices.isEmpty() || choices.isMissingNode()) {
-                throw new AIDiagnosticException("OpenAI returned no choices in response");
+                throw new AIDiagnosticException("AI provider returned no choices in response");
             }
 
             String content = choices.get(0).path("message").path("content").asText();
             if (content == null || content.isBlank()) {
-                throw new AIDiagnosticException("OpenAI returned empty content");
+                throw new AIDiagnosticException("AI provider returned empty content");
             }
 
             log.debug("Received AI response ({} chars)", content.length());
             return content;
         } catch (RestClientResponseException e) {
             throw new AIDiagnosticException(
-                    "OpenAI API error (HTTP " + e.getStatusCode().value() + ")", e);
+                    "AI provider error (HTTP " + e.getStatusCode().value() + ")", e);
         } catch (RestClientException e) {
-            throw new AIDiagnosticException("Failed to call OpenAI API", e);
+            throw new AIDiagnosticException("Failed to call AI provider", e);
         } catch (Exception e) {
             if (e instanceof AIDiagnosticException ade) throw ade;
-            throw new AIDiagnosticException("Unexpected error calling OpenAI API", e);
+            throw new AIDiagnosticException("Unexpected error calling AI provider", e);
         }
     }
 
     private void logTokenUsage(JsonNode root) {
         JsonNode usage = root.path("usage");
         if (!usage.isMissingNode()) {
-            log.debug("OpenAI token usage — prompt: {}, completion: {}, total: {}",
+            log.debug("AI token usage — prompt: {}, completion: {}, total: {}",
                     usage.path("prompt_tokens").asInt(),
                     usage.path("completion_tokens").asInt(),
                     usage.path("total_tokens").asInt());
