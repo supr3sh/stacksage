@@ -50,6 +50,8 @@ springdoc:
     path: /swagger-ui.html
 
 app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8080}
   upload-dir: ./uploads
   rate-limit:
     enabled: true
