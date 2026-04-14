@@ -171,9 +171,12 @@ public class AnalysisOrchestratorImpl implements AnalysisOrchestrator {
     }
 
     private void executeAnalysis(AnalysisRecord record, AnalysisTask task) {
+        String analysisId = record.getId();
+        String uploadId = record.getUploadId();
+
         try {
             record.setStatus(AnalysisStatus.IN_PROGRESS);
-            analysisRepository.save(record);
+            record = analysisRepository.save(record);
 
             List<AnalysisResult> results = task.execute();
 
@@ -183,24 +186,33 @@ public class AnalysisOrchestratorImpl implements AnalysisOrchestrator {
             analysisRepository.save(record);
 
             log.info("Analysis completed: analysisId={}, exceptions={}",
-                    record.getId(), results.size());
+                    analysisId, results.size());
 
-            sseService.publish("analysis.completed", record.getUploadId(), Map.of(
-                    "analysisId", record.getId(),
-                    "uploadId", String.valueOf(record.getUploadId())));
+            sseService.publish("analysis.completed", uploadId, Map.of(
+                    "analysisId", analysisId,
+                    "uploadId", String.valueOf(uploadId)));
         } catch (Exception e) {
             log.error("Analysis failed: analysisId={}: {}",
-                    record.getId(), e.getMessage(), e);
-            record.setStatus(AnalysisStatus.FAILED);
-            record.setErrorMessage(summarizeError(e));
-            record.setCompletedAt(LocalDateTime.now());
-            analysisRepository.save(record);
+                    analysisId, e.getMessage(), e);
+
+            try {
+                AnalysisRecord fresh = analysisRepository.findById(analysisId).orElse(null);
+                if (fresh != null) {
+                    fresh.setStatus(AnalysisStatus.FAILED);
+                    fresh.setErrorMessage(summarizeError(e));
+                    fresh.setCompletedAt(LocalDateTime.now());
+                    analysisRepository.save(fresh);
+                }
+            } catch (Exception saveErr) {
+                log.error("Failed to persist FAILED status for analysisId={}: {}",
+                        analysisId, saveErr.getMessage());
+            }
 
             Map<String, Object> eventData = new HashMap<>();
-            eventData.put("analysisId", record.getId());
-            eventData.put("uploadId", record.getUploadId());
-            eventData.put("error", record.getErrorMessage());
-            sseService.publish("analysis.failed", record.getUploadId(), eventData);
+            eventData.put("analysisId", analysisId);
+            eventData.put("uploadId", uploadId);
+            eventData.put("error", summarizeError(e));
+            sseService.publish("analysis.failed", uploadId, eventData);
         }
     }
 
