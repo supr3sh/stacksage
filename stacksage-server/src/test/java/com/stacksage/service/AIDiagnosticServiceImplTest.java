@@ -1,7 +1,7 @@
 package com.stacksage.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.stacksage.config.OpenAIConfig;
+import com.stacksage.config.AIProviderConfig;
 import com.stacksage.exception.AIDiagnosticException;
 import com.stacksage.model.AIDiagnosisResult;
 import com.stacksage.parser.ExceptionDetail;
@@ -13,21 +13,21 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class OpenAIDiagnosticServiceImplTest {
+class AIDiagnosticServiceImplTest {
 
-    private OpenAIConfig config;
+    private AIProviderConfig config;
     private ObjectMapper objectMapper;
-    private OpenAIDiagnosticServiceImpl service;
+    private AIDiagnosticServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        config = new OpenAIConfig();
+        config = new AIProviderConfig();
         config.setApiKey("test-key");
-        config.setModel("gpt-4o-mini");
+        config.setModel("meta-llama/llama-3.3-70b-instruct:free");
         config.setMaxTokens(1024);
         config.setTemperature(0.3);
         objectMapper = new ObjectMapper();
-        service = new OpenAIDiagnosticServiceImpl(config.openAIRestClient(), config, objectMapper);
+        service = new AIDiagnosticServiceImpl(config.aiRestClient(), config, objectMapper);
     }
 
     @Test

@@ -1,6 +1,6 @@
 # StackSage
 
-AI-powered Java debugging platform. Upload Java log files or submit pre-parsed exception data, and get automated root cause analysis, explanations, and actionable fixes powered by OpenAI.
+AI-powered Java debugging platform. Upload Java log files or submit pre-parsed exception data, and get automated root cause analysis, explanations, and actionable fixes powered by AI (via OpenRouter).
 
 ## Project Structure
 
@@ -9,7 +9,7 @@ stacksage/
 ├── stacksage-common/    # Shared parser library (no Spring dependency)
 │   └── parser/          # ExceptionDetail, LogParser, RegexLogParser
 ├── stacksage-server/    # Spring Boot REST API server
-│   ├── config/          # Async, OpenAI, rate limiting, storage, Swagger
+│   ├── config/          # Async, AI provider, rate limiting, storage, Swagger
 │   ├── controller/      # Upload + Analysis REST endpoints
 │   ├── service/         # File upload, log analysis, AI diagnosis, orchestration
 │   ├── model/           # JPA entities, DTOs, enums
@@ -23,7 +23,7 @@ stacksage/
 - **Java 17** (JDK)
 - **PostgreSQL** (or a hosted instance like [Neon](https://neon.tech))
 - **Maven** (wrapper included: `mvnw` / `mvnw.cmd`)
-- **OpenAI API key** (for AI-powered diagnosis)
+- **AI API key** (OpenRouter or OpenAI-compatible provider, for AI-powered diagnosis)
 
 ## Build
 
@@ -44,7 +44,7 @@ This builds all three modules:
 
 ```bash
 # Set required environment variables
-export OPENAI_API_KEY=sk-your-key-here
+export AI_API_KEY=sk-your-key-here
 export DB_USERNAME=your_db_user       # optional, defaults to neondb_owner
 export DB_PASSWORD=your_db_password   # optional, defaults to configured value
 
@@ -142,7 +142,7 @@ Waiting for analysis...... COMPLETED
 |----------|-------------|---------|
 | `DB_USERNAME` | PostgreSQL username | `neondb_owner` |
 | `DB_PASSWORD` | PostgreSQL password | (configured) |
-| `OPENAI_API_KEY` | OpenAI API key | (none — required for AI features) |
+| `AI_API_KEY` | AI provider API key (OpenRouter, OpenAI, etc.) | (none — required for AI features) |
 | `STACKSAGE_SERVER` | CLI server URL | `http://localhost:8080` |
 
 ### Application Properties
@@ -155,9 +155,10 @@ Key settings in `application.yml`:
 | `app.rate-limit.enabled` | Enable rate limiting | `true` |
 | `app.rate-limit.max-requests` | Requests per window | `20` |
 | `app.rate-limit.window-seconds` | Rate limit window | `60` |
-| `app.openai.model` | OpenAI model | `gpt-4o-mini` |
-| `app.openai.max-tokens` | Max response tokens | `1024` |
-| `app.openai.temperature` | AI temperature | `0.3` |
+| `app.ai.model` | AI model identifier | `meta-llama/llama-3.3-70b-instruct:free` |
+| `app.ai.base-url` | AI provider base URL | `https://openrouter.ai/api` |
+| `app.ai.max-tokens` | Max response tokens | `1024` |
+| `app.ai.temperature` | AI temperature | `0.3` |
 
 ## Database
 
@@ -173,7 +174,7 @@ Flyway runs automatically on server startup and applies any pending migrations.
 
 - **Java 17** + **Spring Boot 3.3**
 - **PostgreSQL** + **Flyway** migrations
-- **OpenAI API** (GPT-4o-mini) via Spring RestClient
+- **OpenRouter API** (Llama 3.3 70B free tier) via Spring RestClient — also compatible with OpenAI and other providers
 - **Spring Boot Actuator** for health checks
 - **SpringDoc OpenAPI** for interactive API documentation
 - **Lombok** for reducing boilerplate
