@@ -26,7 +26,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-stacksage}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-stacksage}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:?Set OPENAI_API_KEY in .env}
+      AI_API_KEY: ${AI_API_KEY:?Set AI_API_KEY in .env}
       JASYPT_ENCRYPTOR_PASSWORD: ${JASYPT_ENCRYPTOR_PASSWORD:-}
     volumes:
       - uploads:/app/uploads
