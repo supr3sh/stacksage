@@ -17,6 +17,7 @@ public class UploadResponse {
     private String filename;
     private long fileSize;
     private UploadStatus status;
+    private boolean retain;
     private LocalDateTime createdAt;
     private String content;
 
@@ -26,6 +27,7 @@ public class UploadResponse {
                 .filename(record.getOriginalFilename())
                 .fileSize(record.getFileSize())
                 .status(record.getStatus())
+                .retain(record.isRetain())
                 .createdAt(record.getCreatedAt())
                 .build();
     }
@@ -36,6 +38,7 @@ public class UploadResponse {
                 .filename(record.getOriginalFilename())
                 .fileSize(record.getFileSize())
                 .status(record.getStatus())
+                .retain(record.isRetain())
                 .createdAt(record.getCreatedAt())
                 .content(content)
                 .build();

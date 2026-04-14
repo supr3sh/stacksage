@@ -59,7 +59,8 @@ class AnalysisOrchestratorImplTest {
         };
 
         orchestrator = new AnalysisOrchestratorImpl(
-                analysisRepo, uploadRepo, logAnalysisService, storageConfig, objectMapper);
+                analysisRepo, uploadRepo, logAnalysisService, storageConfig, objectMapper,
+                new SseService());
     }
 
     @Test
@@ -195,6 +196,14 @@ class AnalysisOrchestratorImplTest {
         }
 
         @Override
+        public List<AnalysisRecord> findByUploadIdIn(List<String> uploadIds) {
+            if (savedRecord != null && uploadIds.contains(savedRecord.getUploadId())) {
+                return List.of(savedRecord);
+            }
+            return List.of();
+        }
+
+        @Override
         public Optional<AnalysisRecord> findById(String s) {
             if (savedRecord != null && s.equals(savedRecord.getId())) {
                 return Optional.of(savedRecord);
@@ -242,7 +251,16 @@ class AnalysisOrchestratorImplTest {
             return Optional.empty();
         }
 
-        // Minimal stubs for unused methods
+        @Override
+        public List<UploadRecord> findByRetainTrueAndCreatedAtBefore(LocalDateTime cutoff) {
+            return List.of();
+        }
+
+        @Override
+        public List<UploadRecord> findByCreatedAtBefore(LocalDateTime cutoff) {
+            return List.of();
+        }
+
         @Override public <S extends UploadRecord> S save(S entity) { return entity; }
         @Override public boolean existsById(String s) { return false; }
         @Override public List<UploadRecord> findAll() { return List.of(); }

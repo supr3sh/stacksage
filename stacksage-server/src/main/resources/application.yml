@@ -74,3 +74,6 @@ app:
   cleanup:
     enabled: true
     interval-ms: 900000
+    retain-hours: 48
+    delete-records: false
+    record-retention-hours: 168
