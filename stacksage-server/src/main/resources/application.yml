@@ -4,8 +4,8 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 100MB
+      max-request-size: 100MB
 
   datasource:
     url: jdbc:postgresql://ep-billowing-wildflower-a1ymqepo.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
@@ -30,8 +30,8 @@ jasypt:
 server:
   port: 9090
   tomcat:
-    max-http-form-content-size: 2MB
-    max-swallow-size: 2MB
+    max-http-form-content-size: 100MB
+    max-swallow-size: 100MB
 
 management:
   endpoints:
