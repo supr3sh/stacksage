@@ -34,7 +34,7 @@ export function AnalysisView({ id }) {
     );
   }
 
-  const results = analysis.resultsJson ? JSON.parse(analysis.resultsJson) : [];
+  const results = analysis.results || [];
 
   return (
     <div class="max-w-3xl mx-auto space-y-6">
