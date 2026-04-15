@@ -1,7 +1,13 @@
+import { useState } from 'preact/hooks';
 import { StatusIndicator } from '../components/StatusIndicator.jsx';
 import { CopyButton } from '../components/CopyButton.jsx';
+import { Pagination } from '../components/Pagination.jsx';
+
+const PAGE_SIZE = 10;
 
 export function History({ uploads, clearAll }) {
+  const [page, setPage] = useState(1);
+
   if (!uploads.length) {
     return (
       <div class="text-center py-16">
@@ -15,10 +21,18 @@ export function History({ uploads, clearAll }) {
     );
   }
 
+  const totalPages = Math.ceil(uploads.length / PAGE_SIZE);
+  const safePage = Math.min(page, totalPages);
+  const start = (safePage - 1) * PAGE_SIZE;
+  const visible = uploads.slice(start, start + PAGE_SIZE);
+
   return (
     <div class="space-y-4">
       <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold">Upload History</h1>
+        <h1 class="text-2xl font-bold">
+          Upload History
+          <span class="text-sm font-normal text-gray-400 ml-2">({uploads.length})</span>
+        </h1>
         <button
           onClick={clearAll}
           class="text-xs text-red-500 hover:text-red-700 transition-colors"
@@ -27,7 +41,7 @@ export function History({ uploads, clearAll }) {
         </button>
       </div>
       <div class="space-y-3">
-        {uploads.map((u) => (
+        {visible.map((u) => (
           <div key={u.uploadId} class="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0 flex-1">
@@ -58,6 +72,7 @@ export function History({ uploads, clearAll }) {
           </div>
         ))}
       </div>
+      <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );
 }

@@ -1,10 +1,15 @@
+import { useState } from 'preact/hooks';
 import { useAnalysisPoll } from '../hooks/useAnalysisPoll.js';
 import { AnalysisCard } from '../components/AnalysisCard.jsx';
 import { StatusIndicator } from '../components/StatusIndicator.jsx';
 import { CopyButton } from '../components/CopyButton.jsx';
+import { Pagination } from '../components/Pagination.jsx';
+
+const PAGE_SIZE = 10;
 
 export function AnalysisView({ id }) {
   const { analysis, loading, error } = useAnalysisPoll(id, 'analysisId');
+  const [page, setPage] = useState(1);
 
   if (error) {
     return (
@@ -35,12 +40,21 @@ export function AnalysisView({ id }) {
   }
 
   const results = analysis.results || [];
+  const totalPages = Math.ceil(results.length / PAGE_SIZE);
+  const safePage = Math.min(page, Math.max(totalPages, 1));
+  const start = (safePage - 1) * PAGE_SIZE;
+  const visible = results.slice(start, start + PAGE_SIZE);
 
   return (
     <div class="max-w-3xl mx-auto space-y-6">
       <div class="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 class="text-2xl font-bold">Analysis Results</h1>
+          <h1 class="text-2xl font-bold">
+            Analysis Results
+            {results.length > 0 && (
+              <span class="text-sm font-normal text-gray-400 ml-2">({results.length} exceptions)</span>
+            )}
+          </h1>
           <div class="flex items-center gap-2 mt-1 text-xs text-gray-400">
             <span class="font-mono">{id}</span>
             <CopyButton text={id} />
@@ -63,13 +77,15 @@ export function AnalysisView({ id }) {
         <p class="text-gray-500 text-sm">No exceptions found in the log file.</p>
       )}
 
-      {results.length > 0 && (
+      {visible.length > 0 && (
         <div class="space-y-4">
-          {results.map((r, i) => (
-            <AnalysisCard key={i} result={r} index={i} />
+          {visible.map((r, i) => (
+            <AnalysisCard key={start + i} result={r} index={start + i} />
           ))}
         </div>
       )}
+
+      <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setPage} />
 
       {loading && (
         <p class="text-sm text-gray-400 text-center">Polling for updates...</p>

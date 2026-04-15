@@ -15,8 +15,8 @@ export function Upload({ addUpload, updateUpload, sessionId }) {
 
   const { analysis, loading: polling } = useAnalysisPoll(uploadId, 'uploadId');
 
-  if (analysis?.status === 'COMPLETED' && analysis.id) {
-    updateUpload?.(uploadId, { analysisId: analysis.id, status: 'COMPLETED' });
+  if (analysis?.status === 'COMPLETED' && analysis.analysisId) {
+    updateUpload?.(uploadId, { analysisId: analysis.analysisId, status: 'COMPLETED' });
   }
   if (analysis?.status === 'FAILED') {
     updateUpload?.(uploadId, { status: 'FAILED' });
@@ -75,7 +75,7 @@ export function Upload({ addUpload, updateUpload, sessionId }) {
           </div>
           {analysis?.status === 'COMPLETED' && (
             <button
-              onClick={() => route(`/analysis/${analysis.id}`)}
+              onClick={() => route(`/analysis/${analysis.analysisId}`)}
               class="w-full mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm
                      font-medium rounded-lg transition-colors"
             >
